@@ -2,7 +2,6 @@ from MoeaBench.base_benchmark import BaseBenchmark
 from MoeaBench.CACHE_bk_user import CACHE_bk_user
 
 
-#@experiment10.benchmark.register_benchmark()
 class dtlz5(BaseBenchmark):
 
     from enum import Enum
@@ -128,7 +127,6 @@ class dtlz5(BaseBenchmark):
 
 @staticmethod
 def my_dtlz5(m = 3 ,p = 600 ,k = 5):
-        print("aqui")
         my_benchmark = dtlz5(CACHE_bk_user(), m, p, k)
         F = my_benchmark.POFsamples()
         my_benchmark.get_CACHE().DATA_store("my_dtlz5",'IN POF',my_benchmark.M,my_benchmark.N,my_benchmark.n_ieq_constr,F,my_benchmark.P,my_benchmark.K)
