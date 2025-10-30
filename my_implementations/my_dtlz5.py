@@ -1,6 +1,9 @@
 from MoeaBench.base_benchmark import BaseBenchmark
+from MoeaBench.CACHE_bk_user import CACHE_bk_user
 
-class my_dtlz5(BaseBenchmark):
+
+#@experiment10.benchmark.register_benchmark()
+class dtlz5(BaseBenchmark):
 
     from enum import Enum
     import numpy as np
@@ -121,3 +124,12 @@ class my_dtlz5(BaseBenchmark):
             result["G"] = const
             result["feasible"] = self.np.any((result["G"] <-0.00000000001)  | (result["G"] > 0.00000000001) )
         return result
+
+
+@staticmethod
+def my_dtlz5(m = 3 ,p = 600 ,k = 5):
+        print("aqui")
+        my_benchmark = dtlz5(CACHE_bk_user(), m, p, k)
+        F = my_benchmark.POFsamples()
+        my_benchmark.get_CACHE().DATA_store("my_dtlz5",'IN POF',my_benchmark.M,my_benchmark.N,my_benchmark.n_ieq_constr,F,my_benchmark.P,my_benchmark.K)
+        return my_benchmark
