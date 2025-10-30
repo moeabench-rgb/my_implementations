@@ -57,7 +57,7 @@ class my_dtlz5(BaseBenchmark):
 
 
     def F3(self,M,th,Gxm):
-        theta = list(map(lambda TH: np.cos(TH), th[0:(M-3)]))
+        theta = list(map(lambda TH: self.np.cos(TH), th[0:(M-3)]))
         return (1+Gxm)*self.np.prod(self.np.column_stack(theta ), axis = 1).reshape(Gxm.shape[0],1)*self.np.column_stack(self.np.sin(th[(M-3):(M-2)]))
 
 
