@@ -1,5 +1,5 @@
 from MoeaBench.base_moea import BaseMoea
-
+from  MoeaBench.CACHE import CACHE
 
 class NSGA2deap(BaseMoea):
 
@@ -78,3 +78,10 @@ class NSGA2deap(BaseMoea):
       X_gen_all.append(self.np.column_stack([self.np.array([self.np.array(ind) for ind in pop ])]))
     F = self.np.column_stack([self.np.array([ind.fitness.values for ind in pop ])])
     return F_gen_all,X_gen_all,F,self.generations,self.population
+
+@staticmethod
+def my_NSGA2deap(problem,population = 100, generations = 300):
+        result = CACHE()
+        instance_moea = NSGA2deap(problem,population,generations)
+        result.get_DATA_conf().set_DATA_MOEA(instance_moea,problem)     
+        return (result,NSGA2deap,"NSGA2deap")
