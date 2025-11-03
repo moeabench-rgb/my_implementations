@@ -26,9 +26,9 @@ class NSGA2deap(BaseMoea):
 
   def uniform(self,low, up, size=None):
     try:
-      return [self.random.uniform(a,b) for a,b in zip(low,up)]
+      return [random.uniform(a,b) for a,b in zip(low,up)]
     except TypeError as e:
-      return [self.random.uniform(a,b) for a,b in zip([low]*size,[up]*size)]
+      return [random.uniform(a,b) for a,b in zip([low]*size,[up]*size)]
 
 
   def evaluate(self,X):
@@ -59,7 +59,7 @@ class NSGA2deap(BaseMoea):
       offspring = self.tools.selTournamentDCD(pop, len(pop))
       offspring = [self.toolbox.clone(ind) for ind in offspring]
       for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
-        if self.random.random() <= 0.9:
+        if random.random() <= 0.9:
           self.toolbox.mate(ind1, ind2)
         self.toolbox.mutate(ind1)
         self.toolbox.mutate(ind2)
