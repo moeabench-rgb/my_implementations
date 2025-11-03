@@ -1,32 +1,27 @@
 from MoeaBench.base_moea import BaseMoea
-from  MoeaBench.CACHE import CACHE
+import random
+from deap import base, creator, tools, algorithms
+import array
+import numpy as np
+
 
 class NSGA2deap(BaseMoea):
 
-  import random
-  from deap import base, creator, tools, algorithms
-  import array
-  import numpy as np
-
   def __init__(self,problem=None,population=0,generations=0):
-    self.problem=problem
-    self.generations=generations
-    self.population = population
-    self.n_ieq= self.problem.get_CACHE().get_BENCH_CI().get_n_ieq_constr()
-
-    self.creator.create("FitnessMin", self.base.Fitness, weights=(-1.0,) * self.problem.get_CACHE().get_BENCH_CI().get_M())
-    self.creator.create("Individual", self.array.array, typecode='d', fitness=self.creator.FitnessMin)
-    self.toolbox = self.base.Toolbox()
-    self.toolbox.register("attr_float", self.uniform, 0, 1,self.problem.get_CACHE().get_BENCH_CI().get_Nvar())
-    self.toolbox.register("individual", self.tools.initIterate, self.creator.Individual, self.toolbox.attr_float)
-    self.toolbox.register("population", self.tools.initRepeat, list, self.toolbox.individual)
+    super().__init__(self,problem,population,generations)
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.get_M())
+    creator.create("Individual", array.array, typecode='d', fitness=creator.FitnessMin)
+    self.toolbox = base.Toolbox()
+    self.toolbox.register("attr_float", self.uniform, 0, 1, self.get_N())
+    self.toolbox.register("individual", tools.initIterate, creator.Individual, self.toolbox.attr_float)
+    self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
     self.toolbox.register("evaluate",self.evaluate)
     self.evalue = self.toolbox.evaluate
-    self.random.seed(None)
-    self.toolbox.decorate("evaluate", self.tools.DeltaPenality(self.feasible,1000))
-    self.toolbox.register("mate", self.tools.cxSimulatedBinaryBounded, low=0, up=1, eta=20)
-    self.toolbox.register("mutate", self.tools.mutPolynomialBounded, low=0, up=1, eta=20, indpb=1/self.problem.get_CACHE().get_BENCH_CI().get_Nvar())
-    self.toolbox.register("select", self.tools.selNSGA2)
+    random.seed(None)
+    self.toolbox.decorate("evaluate", tools.DeltaPenality(self.feasible,1000))
+    self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=0, up=1, eta=20)
+    self.toolbox.register("mutate", tools.mutPolynomialBounded, low=0, up=1, eta=20, indpb=1/self.get_N())
+    self.toolbox.register("select", tools.selNSGA2)
 
 
   def uniform(self,low, up, size=None):
@@ -37,7 +32,7 @@ class NSGA2deap(BaseMoea):
 
 
   def evaluate(self,X):
-    self.resul = self.problem.evaluation(self.np.array([X]),self.n_ieq)
+    self.resul = self.evaluation(X)
     return self.resul['F'][0]
 
 
@@ -47,20 +42,20 @@ class NSGA2deap(BaseMoea):
       if self.resul["feasible"]:
        return True
     return False
-
+  
 
   def evaluation(self):
-    pop = self.toolbox.population(n=self.population)
+    pop = self.toolbox.population(n=self.get_population())
     invalid_ind = [ind for ind in pop if not ind.fitness.valid]
     fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
     F_gen_all=[]
     X_gen_all=[]
     for ind, fit in zip(invalid_ind, fitnesses):
       ind.fitness.values = fit
-    F_gen_all.append(self.np.column_stack([self.np.array([ind.fitness.values for ind in pop ])]))
-    X_gen_all.append(self.np.column_stack([self.np.array([self.np.array(ind) for ind in pop ])]))
+    F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
+    X_gen_all.append(np.column_stack([np.array([np.array(ind) for ind in pop ])]))
     pop = self.toolbox.select(pop, len(pop))
-    for gen in range(1, self.generations):
+    for gen in range(1, self.get_generations()):
       offspring = self.tools.selTournamentDCD(pop, len(pop))
       offspring = [self.toolbox.clone(ind) for ind in offspring]
       for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
@@ -74,14 +69,14 @@ class NSGA2deap(BaseMoea):
       for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
       pop = self.toolbox.select(pop + offspring, len(pop))
-      F_gen_all.append(self.np.column_stack([self.np.array([ind.fitness.values for ind in pop ])]))
-      X_gen_all.append(self.np.column_stack([self.np.array([self.np.array(ind) for ind in pop ])]))
-    F = self.np.column_stack([self.np.array([ind.fitness.values for ind in pop ])])
-    return F_gen_all,X_gen_all,F,self.generations,self.population
+      F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
+      X_gen_all.append(np.column_stack([np.array([np.array(ind) for ind in pop ])]))
+    F = np.column_stack([np.array([ind.fitness.values for ind in pop ])])
+    return F_gen_all,X_gen_all,F,self.get_generations(),self.get_population()
+
 
 @staticmethod
 def my_NSGA2deap(problem,population = 100, generations = 300):
-        result = CACHE()
         instance_moea = NSGA2deap(problem,population,generations)
-        result.get_DATA_conf().set_DATA_MOEA(instance_moea,problem)     
-        return (result,NSGA2deap,"NSGA2deap")
+        moea = instance_moea.add_MOEA()
+        return moea
