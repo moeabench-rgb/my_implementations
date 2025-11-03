@@ -32,7 +32,7 @@ class NSGA2deap(BaseMoea):
 
 
   def evaluate(self,X):
-    self.resul = self.evaluation(X)
+    self.resul = self.evaluation_benchmark(X)
     return self.resul['F'][0]
 
 
