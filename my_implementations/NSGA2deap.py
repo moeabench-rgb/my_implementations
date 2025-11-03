@@ -56,7 +56,7 @@ class NSGA2deap(BaseMoea):
     X_gen_all.append(np.column_stack([np.array([np.array(ind) for ind in pop ])]))
     pop = self.toolbox.select(pop, len(pop))
     for gen in range(1, self.get_generations()):
-      offspring = self.tools.selTournamentDCD(pop, len(pop))
+      offspring = tools.selTournamentDCD(pop, len(pop))
       offspring = [self.toolbox.clone(ind) for ind in offspring]
       for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
         if random.random() <= 0.9:
