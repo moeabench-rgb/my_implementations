@@ -3,6 +3,7 @@ from enum import Enum
 import numpy as np
 
 
+
 class E_DTLZ(Enum):
        F1   = 1
        F2   = 2
@@ -12,9 +13,9 @@ class E_DTLZ(Enum):
 
 class dtlz5(BaseBenchmark):
 
-    def __init__(self, benchmark, type, M, P, K = None, N = None, D = None, n_ieq_constr=1):
+    def __init__(self, type : str = None, M : int = 3, P : int = 700, K : int = 10, N : int = 0, D : int = 2, n_ieq_constr : int = 1):
         N=K+M-1
-        super().__init__(benchmark, type, M, P, K, N)
+        super().__init__(self, type, M, P, K, N, n_ieq_constr)
         self.llist_E_DTLZ = list(E_DTLZ)
 
 
@@ -113,7 +114,6 @@ class dtlz5(BaseBenchmark):
 
 @staticmethod
 def my_dtlz5(m = 3 ,p = 600 ,k = 5, type = "IN POF"):
-    my_benchmark = dtlz5(my_dtlz5.__name__,type,m, p, k)
-    F = my_benchmark.POFsamples()
-    my_benchmark.add_benchmark(F)
+    my_benchmark = dtlz5(type,m, p, k)
+    my_benchmark.add_benchmark()
     return my_benchmark
