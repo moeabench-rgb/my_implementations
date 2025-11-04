@@ -15,7 +15,7 @@ class dtlz5(BaseBenchmark):
 
     def __init__(self, type : str = None, M : int = 3, P : int = 700, K : int = 10, N : int = 0, D : int = 2, n_ieq_constr : int = 1):
         N=K+M-1
-        super().__init__(self, type, M, P, K, N, n_ieq_constr)
+        super().__init__(type, M, P, K, N, n_ieq_constr)
         self.llist_E_DTLZ = list(E_DTLZ)
 
 
