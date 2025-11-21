@@ -1,7 +1,19 @@
 from MoeaBench.base_benchmark import BaseBenchmark
+from MoeaBench.integration_benchmark import integration_benchmark
 from enum import Enum
 import numpy as np
 
+
+class my_dtlz5(integration_benchmark):
+        
+        def __init__(self, m = 3 ,p = 600 ,k = 5, types = "IN POF"):
+          self.m = m 
+          self.p = p
+          self.k = k
+          self.type = types
+        
+        def instance(self):
+          return dtlz5(self.type, self.m, self.p, self.k)
 
 
 class E_DTLZ(Enum):
@@ -112,8 +124,4 @@ class dtlz5(BaseBenchmark):
         return result
 
 
-@staticmethod
-def my_dtlz5(m = 3 ,p = 600 ,k = 5, type = "IN POF"):
-    my_benchmark = dtlz5(type,m, p, k)
-    my_benchmark.add_benchmark()
-    return my_benchmark
+

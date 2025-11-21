@@ -1,14 +1,25 @@
 from MoeaBench.base_moea import BaseMoea
+from MoeaBench.integration_moea import integration_moea
 import random
 from deap import base, creator, tools, algorithms
 import array
 import numpy as np
 
+class my_NSGA2deap(integration_moea):
+        
+        def __init__(self,population = 160, generations = 300):
+          self.population=population
+          self.generations=generations
+      
+      
+        def instance(self,problem):
+          return NSGA2deap(problem,self.population,self.generations)
+      
 
 class NSGA2deap(BaseMoea):
 
-  def __init__(self,problem=None,population=0,generations=0):
-    super().__init__(self,problem,population,generations)
+  def __init__(self,problem=None,population = 160, generations = 300):
+    super().__init__(problem,population,generations)
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.get_M())
     creator.create("Individual", array.array, typecode='d', fitness=creator.FitnessMin)
     self.toolbox = base.Toolbox()
@@ -32,14 +43,14 @@ class NSGA2deap(BaseMoea):
 
 
   def evaluate(self,X):
-    self.resul = self.evaluation_benchmark(X)
-    return self.resul['F'][0]
+    self.result = self.evaluation_benchmark(X)
+    return self.result['F'][0]
 
 
   def feasible(self,X):
     self.evaluate(X)
-    if 'G' in self.resul:
-      if self.resul["feasible"]:
+    if 'G' in self.result:
+      if self.result["feasible"]:
        return True
     return False
   
@@ -75,8 +86,6 @@ class NSGA2deap(BaseMoea):
     return F_gen_all,X_gen_all,F,self.get_generations(),self.get_population()
 
 
-@staticmethod
-def my_NSGA2deap(problem,population = 100, generations = 300):
-        instance_moea = NSGA2deap(problem,population,generations)
-        moea = instance_moea.add_MOEA()
-        return moea
+
+
+
