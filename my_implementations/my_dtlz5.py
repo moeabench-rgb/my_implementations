@@ -11,10 +11,11 @@ class my_dtlz5(integration_benchmark):
           self.p = p
           self.k = k
           self.type = types
-        
-        def instance(self):
-          return dtlz5(self.type, self.m, self.p, self.k)
 
+         
+        def __call__(self, benchmark):
+          return benchmark.repository(dtlz5(self.type, self.m, self.p, self.k))()
+        
 
 class E_DTLZ(Enum):
        F1   = 1

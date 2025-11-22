@@ -5,6 +5,7 @@ from deap import base, creator, tools, algorithms
 import array
 import numpy as np
 
+
 class my_NSGA2deap(integration_moea):
         
         def __init__(self,population = 160, generations = 300):
@@ -12,9 +13,9 @@ class my_NSGA2deap(integration_moea):
           self.generations=generations
       
       
-        def instance(self,problem):
-          return NSGA2deap(problem,self.population,self.generations)
-      
+        def __call__(self, problem, moa):
+          return moa.repository(NSGA2deap(problem,self.population,self.generations))()
+        
 
 class NSGA2deap(BaseMoea):
 
