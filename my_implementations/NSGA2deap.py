@@ -62,6 +62,7 @@ class NSGA2deap(BaseMoea):
     fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
     F_gen_all=[]
     X_gen_all=[]
+    hist_F_non_dominate=[]
     for ind, fit in zip(invalid_ind, fitnesses):
       ind.fitness.values = fit
     F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
@@ -83,8 +84,10 @@ class NSGA2deap(BaseMoea):
       pop = self.toolbox.select(pop + offspring, len(pop))
       F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
       X_gen_all.append(np.column_stack([np.array([np.array(ind) for ind in pop ])]))
+      non_dominate = tools.sortNondominated(pop, len(pop), first_front_only=True)[0]
+      hist_F_non_dominate.append(np.column_stack([np.array([np.array(ind) for ind in non_dominate ])]))
     F = np.column_stack([np.array([ind.fitness.values for ind in pop ])])
-    return F_gen_all,X_gen_all,F,self.get_generations(),self.get_population()
+    return F_gen_all,X_gen_all,F,self.get_generations(),self.get_population(),hist_F_non_dominate
 
 
 
