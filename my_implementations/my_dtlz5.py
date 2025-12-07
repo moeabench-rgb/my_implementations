@@ -6,16 +6,9 @@ import numpy as np
 
 class my_dtlz5(integration_benchmark):
         
-        def __init__(self, m = 3 ,p = 600 ,k = 5, types = "IN POF"):
-          self.m = m 
-          self.p = p
-          self.k = k
-          self.type = types
-
-         
-        def __call__(self, benchmark):
-          return benchmark.repository(dtlz5(self.type, self.m, self.p, self.k))()
-        
+        def __init__(self, M = 3 ,P = 600 ,K = 5, D = 2, types = "IN POF"):
+          super().__init__(dtlz5,types,M,P,K,D)
+                       
 
 class E_DTLZ(Enum):
        F1   = 1
@@ -26,10 +19,13 @@ class E_DTLZ(Enum):
 
 class dtlz5(BaseBenchmark):
 
-    def __init__(self, type : str = None, M : int = 3, P : int = 700, K : int = 10, N : int = 0, D : int = 2, n_ieq_constr : int = 1):
-        N=K+M-1
-        super().__init__(type, M, P, K, N, n_ieq_constr)
+    def __init__(self, types : str = None, M : int = 3, P : int = 700, K : int = 10, N : int = 0, D : int = 2, n_ieq_constr : int = 1):
+        super().__init__(types, M, P, K, self.calc_N, n_ieq_constr)
         self.llist_E_DTLZ = list(E_DTLZ)
+        
+
+    def calc_N(self,K,M):
+        return K+M-1
 
 
     def constraits(self,f,parameter = 1,f_c=[]):
@@ -103,6 +99,14 @@ class dtlz5(BaseBenchmark):
 
     def calc_g(self,X):
         return np.sum((X[:,self.get_M()-1:]-0.5)**2, axis = 1).reshape(X.shape[0],1)
+    
+
+    def set_Point_in_G(self,X):
+       self._point_in_g = X
+    
+
+    def get_Point_in_G(self):
+       return self._point_in_g
 
 
     def POFsamples(self):
