@@ -6,12 +6,7 @@ import array
 import numpy as np
 
 
-class my_NSGA2deap(integration_moea):
-               
-        def __init__(self,population = 160, generations = 300):
-          super().__init__(NSGA2deap,population,generations)
-                  
-
+@mb.moeas.register_moea()
 class NSGA2deap(BaseMoea):
 
   toolbox = base.Toolbox()
@@ -60,6 +55,9 @@ class NSGA2deap(BaseMoea):
     F_gen_all=[]
     X_gen_all=[]
     hist_F_non_dominate=[]
+    hist_X_non_dominate=[]
+    hist_F_dominate=[]
+    hist_X_dominate=[]
     for ind, fit in zip(invalid_ind, fitnesses):
       ind.fitness.values = fit
     F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
@@ -79,12 +77,34 @@ class NSGA2deap(BaseMoea):
       for ind, fit in zip(invalid_ind, fitnesses):
         ind.fitness.values = fit
       pop = NSGA2deap.toolbox.select(pop + offspring, len(pop))
-      F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
-      X_gen_all.append(np.column_stack([np.array([np.array(ind) for ind in pop ])]))
+      F_gen = np.column_stack([np.array([ind.fitness.values for ind in pop ])])
+      F_gen_all.append(F_gen)
+      X_gen = np.column_stack([np.array([np.array(ind) for ind in pop ])])
+      X_gen_all.append(X_gen)
+
       non_dominate = tools.sortNondominated(pop, len(pop), first_front_only=True)[0]
-      hist_F_non_dominate.append(np.column_stack([nondominate  for nondominate in  ind.fitness.values for ind in non_dominate ]))
+      
+      F_non_dominate = np.column_stack( [np.array(  [ind.fitness.values for ind in non_dominate ])]    )
+      hist_F_non_dominate.append(F_non_dominate)
+    
+      X_non_dominate = np.column_stack(  [np.array(  [ind for ind in non_dominate ]) ])
+      hist_X_non_dominate.append(X_non_dominate)
+
+
+      dominate = [ind for ind in pop if ind not in non_dominate]
+      
+      F_dominate = [ind.fitness.values for ind in dominate]
+      F_dominate = np.array(F_dominate) if len(F_dominate) == 0 else np.column_stack(  [np.array(  F_dominate)])
+      hist_F_dominate.append(F_dominate)
+
+
+      X_dominate = [ind for ind in dominate]
+      X_dominate = np.array(X_dominate) if len(X_dominate) == 0 else np.column_stack( [np.array( X_dominate)])
+      hist_X_dominate.append(X_dominate)
+       
+
     F = np.column_stack([np.array([ind.fitness.values for ind in pop ])])
-    return F_gen_all,X_gen_all,F,hist_F_non_dominate
+    return F_gen_all,X_gen_all,F,hist_F_non_dominate,hist_X_non_dominate,hist_F_dominate,hist_X_dominate
 
 
 

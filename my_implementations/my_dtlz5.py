@@ -17,6 +17,7 @@ class E_DTLZ(Enum):
        Fm   = 5
 
 
+@mb.benchmarks.register_benchmark()
 class dtlz5(BaseBenchmark):
 
     def __init__(self, types : str = None, M : int = 3, P : int = 700, K : int = 10, N : int = 0, D : int = 2, n_ieq_constr : int = 1):
@@ -100,7 +101,7 @@ class dtlz5(BaseBenchmark):
     def calc_g(self,X):
         return np.sum((X[:,self.get_M()-1:]-0.5)**2, axis = 1).reshape(X.shape[0],1)
     
-
+    
     def set_Point_in_G(self,X):
        self._point_in_g = X
     
@@ -112,8 +113,9 @@ class dtlz5(BaseBenchmark):
     def POFsamples(self):
         X = self.get_Points()
         X[:,self.get_M()-1:self.get_N()]=0.5
+        self.set_Point_in_G(X)
         G = self.calc_g(X)
-        F = self.eval_cons(self.calc_f(X,G))
+        F = self.eval_cons(self.calc_f(self.get_Point_in_G(),G))
         return F
 
 
