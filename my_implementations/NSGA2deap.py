@@ -6,7 +6,12 @@ import array
 import numpy as np
 
 
-@mb.moeas.register_moea()
+class my_NSGA2deap(integration_moea):
+               
+        def __init__(self,population = 160, generations = 300):
+          super().__init__(NSGA2deap,population,generations)
+
+
 class NSGA2deap(BaseMoea):
 
   toolbox = base.Toolbox()

@@ -17,7 +17,6 @@ class E_DTLZ(Enum):
        Fm   = 5
 
 
-@mb.benchmarks.register_benchmark()
 class dtlz5(BaseBenchmark):
 
     def __init__(self, types : str = None, M : int = 3, P : int = 700, K : int = 10, N : int = 0, D : int = 2, n_ieq_constr : int = 1):
