@@ -8,8 +8,8 @@ import numpy as np
 
 class my_NSGA2deap(integration_moea):
                
-        def __init__(self,population = 160, generations = 300):
-          super().__init__(NSGA2deap,population,generations)
+        def __init__(self,population = 160, generations = 300, seed = 1):
+          super().__init__(NSGA2deap,population,generations,seed)
 
 
 class NSGA2deap(BaseMoea):
@@ -17,8 +17,8 @@ class NSGA2deap(BaseMoea):
   toolbox = base.Toolbox()
   result_evaluate = None
 
-  def __init__(self,problem=None,population = 160, generations = 300):
-    super().__init__(problem,population,generations)  
+  def __init__(self,problem=None,population = 160, generations = 300, seed = 1):
+    super().__init__(problem,population,generations,seed)  
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.get_M())
     creator.create("Individual", array.array, typecode='d', fitness=creator.FitnessMin)   
     NSGA2deap.toolbox.register("attr_float", self.uniform, 0, 1, self.get_N())
@@ -26,7 +26,7 @@ class NSGA2deap(BaseMoea):
     NSGA2deap.toolbox.register("population", tools.initRepeat, list, NSGA2deap.toolbox.individual)
     NSGA2deap.toolbox.register("evaluate",self.evaluate)
     self.evalue = NSGA2deap.toolbox.evaluate
-    random.seed(None)
+    random.seed(1)
     NSGA2deap.toolbox.decorate("evaluate", tools.DeltaPenality(self.feasible,1000))
     NSGA2deap.toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=0, up=1, eta=20)
     NSGA2deap.toolbox.register("mutate", tools.mutPolynomialBounded, low=0, up=1, eta=20, indpb=1/self.get_N())
