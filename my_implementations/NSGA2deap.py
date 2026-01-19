@@ -1,116 +1,150 @@
-from MoeaBench.base_moea import BaseMoea
-from MoeaBench.integration_moea import integration_moea
+# SPDX-FileCopyrightText: 2025 Monaco F. J. <monaco@usp.br>
+# SPDX-FileCopyrightText: 2025 Silva F. F. <fernandoferreira.silva42@usp.br>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+from MoeaBench.core.base_moea import BaseMoea
 import random
-from deap import base, creator, tools, algorithms
+from deap import base, creator, tools
 import array
 import numpy as np
+from MoeaBench import mb
 
 
-class my_NSGA2deap(integration_moea):
-               
-        def __init__(self,population = 160, generations = 300, seed = 1):
-          super().__init__(NSGA2deap,population,generations,seed)
-
-
-class NSGA2deap(BaseMoea):
-
-  toolbox = base.Toolbox()
-  result_evaluate = None
-
-  def __init__(self,problem=None,population = 160, generations = 300, seed = 1):
-    super().__init__(problem,population,generations,seed)  
-    creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.get_M())
-    creator.create("Individual", array.array, typecode='d', fitness=creator.FitnessMin)   
-    NSGA2deap.toolbox.register("attr_float", self.uniform, 0, 1, self.get_N())
-    NSGA2deap.toolbox.register("individual", tools.initIterate, creator.Individual, NSGA2deap.toolbox.attr_float)
-    NSGA2deap.toolbox.register("population", tools.initRepeat, list, NSGA2deap.toolbox.individual)
-    NSGA2deap.toolbox.register("evaluate",self.evaluate)
-    self.evalue = NSGA2deap.toolbox.evaluate
-    random.seed(1)
-    NSGA2deap.toolbox.decorate("evaluate", tools.DeltaPenality(self.feasible,1000))
-    NSGA2deap.toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=0, up=1, eta=20)
-    NSGA2deap.toolbox.register("mutate", tools.mutPolynomialBounded, low=0, up=1, eta=20, indpb=1/self.get_N())
-    NSGA2deap.toolbox.register("select", tools.selNSGA2)
-
-
-  def uniform(self,low, up, size=None):
-    try:
-      return [random.uniform(a,b) for a,b in zip(low,up)]
-    except TypeError as e:
-      return [random.uniform(a,b) for a,b in zip([low]*size,[up]*size)]
-
-
-  def evaluate(self,X):
-    NSGA2deap.result_evaluate = self.evaluation_benchmark(X)
-    return NSGA2deap.result_evaluate['F'][0]
-
-
-  def feasible(self,X):
-    self.evaluate(X)
-    if 'G' in NSGA2deap.result_evaluate:
-      if NSGA2deap.result_evaluate["feasible"]:
-       return True
-    return False
-  
-
-  def evaluation(self):
-    pop = NSGA2deap.toolbox.population(n=self.get_population())
-    invalid_ind = [ind for ind in pop if not ind.fitness.valid]
-    fitnesses = NSGA2deap.toolbox.map(NSGA2deap.toolbox.evaluate, invalid_ind)
-    F_gen_all=[]
-    X_gen_all=[]
-    hist_F_non_dominate=[]
-    hist_X_non_dominate=[]
-    hist_F_dominate=[]
-    hist_X_dominate=[]
-    for ind, fit in zip(invalid_ind, fitnesses):
-      ind.fitness.values = fit
-    F_gen_all.append(np.column_stack([np.array([ind.fitness.values for ind in pop ])]))
-    X_gen_all.append(np.column_stack([np.array([np.array(ind) for ind in pop ])]))
-    pop = NSGA2deap.toolbox.select(pop, len(pop))
-    for gen in range(1, self.get_generations()):
-      offspring = tools.selTournamentDCD(pop, len(pop))
-      offspring = [NSGA2deap.toolbox.clone(ind) for ind in offspring]
-      for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
-        if random.random() <= 0.9:
-          NSGA2deap.toolbox.mate(ind1, ind2)
-        NSGA2deap.toolbox.mutate(ind1)
-        NSGA2deap.toolbox.mutate(ind2)
-        del ind1.fitness.values, ind2.fitness.values
-      invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
-      fitnesses = NSGA2deap.toolbox.map(NSGA2deap.toolbox.evaluate, invalid_ind)
-      for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit
-      pop = NSGA2deap.toolbox.select(pop + offspring, len(pop))
-      F_gen = np.column_stack([np.array([ind.fitness.values for ind in pop ])])
-      F_gen_all.append(F_gen)
-      X_gen = np.column_stack([np.array([np.array(ind) for ind in pop ])])
-      X_gen_all.append(X_gen)
-
-      non_dominate = tools.sortNondominated(pop, len(pop), first_front_only=True)[0]
-      
-      F_non_dominate = np.column_stack( [np.array(  [ind.fitness.values for ind in non_dominate ])]    )
-      hist_F_non_dominate.append(F_non_dominate)
+# 1. Component: Custom MOEA
+class myMOEA(BaseMoea):
+    """
+    Implementation of the NSGA-II algorithm using the DEAP library.
     
-      X_non_dominate = np.column_stack(  [np.array(  [ind for ind in non_dominate ]) ])
-      hist_X_non_dominate.append(X_non_dominate)
+    This class adapts DEAP's NSGA-II to the MoeaBench interface, 
+    returning generational history directly.
+    """
 
+    def __init__(self, problem=None, population=160, generations=300, seed=1):
+        """
+        Initializes NSGA2deap.
+        
+        Args:
+            problem: The benchmark problem or experiment.
+            population (int): Population size.
+            generations (int): Number of generations.
+            seed (int): Random seed.
+        """
+        super().__init__(problem, population, generations, seed)  
+        self.toolbox = None
 
-      dominate = [ind for ind in pop if ind not in non_dominate]
-      
-      F_dominate = [ind.fitness.values for ind in dominate]
-      F_dominate = np.array(F_dominate) if len(F_dominate) == 0 else np.column_stack(  [np.array(  F_dominate)])
-      hist_F_dominate.append(F_dominate)
+    def _setup_deap(self):
+        """Configures the DEAP toolbox and creator."""
+        if not hasattr(creator, "FitnessMin"):
+            creator.create("FitnessMin", base.Fitness, weights=(-1.0,) * self.get_M())
+        if not hasattr(creator, "Individual"):
+            creator.create("Individual", array.array, typecode='d', fitness=creator.FitnessMin)   
+        
+        self.toolbox = base.Toolbox()
+        self.toolbox.register("attr_float", self.uniform, 0, 1, self.get_N())
+        self.toolbox.register("individual", tools.initIterate, creator.Individual, self.toolbox.attr_float)
+        self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
+        self.toolbox.register("evaluate", self._evaluate_ind)
+        
+        random.seed(self.seed)
+        self.toolbox.decorate("evaluate", tools.DeltaPenality(self._feasible_ind, 1000))
+        self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, low=0, up=1, eta=20)
+        self.toolbox.register("mutate", tools.mutPolynomialBounded, low=0, up=1, eta=20, indpb=1/self.get_N())
+        self.toolbox.register("select", tools.selNSGA2)
 
+    def uniform(self, low, up, size=None):
+        """Generates uniform random values for individuals."""
+        try:
+            return [random.uniform(a, b) for a, b in zip(low, up)]
+        except TypeError:
+            return [random.uniform(a, b) for a, b in zip([low]*size, [up]*size)]
 
-      X_dominate = [ind for ind in dominate]
-      X_dominate = np.array(X_dominate) if len(X_dominate) == 0 else np.column_stack( [np.array( X_dominate)])
-      hist_X_dominate.append(X_dominate)
-       
+    def _evaluate_ind(self, ind):
+        """Evaluates a single DEAP individual."""
+        res = self.evaluation_benchmark(np.array(ind))
+        return res['F'][0]
 
-    F = np.column_stack([np.array([ind.fitness.values for ind in pop ])])
-    return F_gen_all,X_gen_all,F,hist_F_non_dominate,hist_X_non_dominate,hist_F_dominate,hist_X_dominate
+    def _feasible_ind(self, ind):
+        """Checks feasibility of an individual if constraints exist."""
+        res = self.evaluation_benchmark(np.array(ind))
+        if 'G' in res:
+            return not res.get("feasible", False) 
+        return True
 
+    def evaluation(self):
+        """
+        Executes the NSGA-II optimization.
+
+        Returns:
+            tuple: (F_gens, X_gens, F_final, hist_F_nd, hist_X_nd, hist_F_dom, hist_X_dom)
+                   where each is a list of arrays (one per generation).
+        """
+        self._setup_deap()
+        pop = self.toolbox.population(n=self.get_population())
+        
+        # Initial evaluation
+        invalid_ind = [ind for ind in pop if not ind.fitness.valid]
+        fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
+        for ind, fit in zip(invalid_ind, fitnesses):
+            ind.fitness.values = fit
+        
+        F_gen_all = []
+        X_gen_all = []
+        hist_F_non_dominate = []
+        hist_X_non_dominate = []
+        hist_F_dominate = []
+        hist_X_dominate = []
+        
+        def capture_stats(p):
+            F = np.array([ind.fitness.values for ind in p])
+            X = np.array([np.array(ind) for ind in p])
+            F_gen_all.append(F)
+            X_gen_all.append(X)
+            
+            # Non-dominated and dominated sets
+            nd = tools.sortNondominated(p, len(p), first_front_only=True)[0]
+            nd_set = set(id(ind) for ind in nd)
+            dom = [ind for ind in p if id(ind) not in nd_set]
+            
+            hist_F_non_dominate.append(np.array([ind.fitness.values for ind in nd]))
+            hist_X_non_dominate.append(np.array([np.array(ind) for ind in nd]))
+            
+            # Handling empty dominated set
+            if dom:
+                hist_F_dominate.append(np.array([ind.fitness.values for ind in dom]))
+                hist_X_dominate.append(np.array([np.array(ind) for ind in dom]))
+            else:
+                hist_F_dominate.append(np.zeros((0, self.get_M())))
+                hist_X_dominate.append(np.zeros((0, self.get_N())))
+
+        capture_stats(pop)
+        
+        pop = self.toolbox.select(pop, len(pop))
+        
+        for gen in range(1, self.get_generations() + 1):
+            offspring = tools.selTournamentDCD(pop, len(pop))
+            offspring = [self.toolbox.clone(ind) for ind in offspring]
+            
+            for ind1, ind2 in zip(offspring[::2], offspring[1::2]):
+                if random.random() <= 0.9:
+                    self.toolbox.mate(ind1, ind2)
+                self.toolbox.mutate(ind1)
+                self.toolbox.mutate(ind2)
+                del ind1.fitness.values, ind2.fitness.values
+            
+            invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+            fitnesses = self.toolbox.map(self.toolbox.evaluate, invalid_ind)
+            for ind, fit in zip(invalid_ind, fitnesses):
+                ind.fitness.values = fit
+            
+            pop = self.toolbox.select(pop + offspring, len(pop))
+            capture_stats(pop)
+
+        F_final = np.array([ind.fitness.values for ind in pop])
+        
+        return F_gen_all, X_gen_all, F_final, \
+               hist_F_non_dominate, hist_X_non_dominate, \
+               hist_F_dominate, hist_X_dominate
 
 
 
