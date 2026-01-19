@@ -1,10 +1,11 @@
 import numpy as np
 from MoeaBench import mb
+from MoeaBench.mops.BaseMop import BaseMop
 
 
 # 1. Component: Custom Problem Logic
 # Inheriting from BaseMop ensures integration with the framework.
-class MyProblem(mb.mops.BaseMop):
+class MyProblem(BaseMop):
     """
     A custom bi-objective problem (ZDT1-like) implemented with NumPy.
     """
