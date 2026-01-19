@@ -1,6 +1,6 @@
 import numpy as np
 from MoeaBench import mb
-from MoeaBench.mops.BaseMop import BaseMop
+from MoeaBench.mops.base_mop import BaseMop
 
 
 # 1. Component: Custom Problem Logic
